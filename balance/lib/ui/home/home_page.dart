@@ -1,9 +1,12 @@
 import 'package:balance/core/database/dao/groups_dao.dart';
+import 'package:balance/core/database/database.dart';
 import 'package:balance/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
   State<StatefulWidget> createState() => _HomePageState();
 }
@@ -18,40 +21,46 @@ class _HomePageState extends State<HomePage> {
         appBar: AppBar(
           title: const Text("Home"),
         ),
-        body: StreamBuilder(
+        body: StreamBuilder<List<Group>>(
           stream: _groupsDao.watch(),
           builder: (context, snapshot) {
             if (!snapshot.hasData) {
-              return Text("Loading...");
+              return const Text("Loading...");
             }
-            return Column(
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Row(children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _controller,
-                    ),
+            return Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _controller,
+                        ),
+                      ),
+                      TextButton(
+                          onPressed: () {
+                            _groupsDao.insert(_controller.text);
+                            _controller.text = "";
+                          },
+                          child: const Text("Create")),
+                    ],
                   ),
-                  TextButton(
-                      onPressed: () {
-                        _groupsDao.insert(_controller.text);
-                        _controller.text = "";
-                      },
-                      child: Text("Create")),
-                ]),
-                Expanded(
-                  child: ListView.builder(
+                  Expanded(
+                    child: ListView.builder(
                       itemCount: snapshot.requireData.length,
                       itemBuilder: (context, index) => ListTile(
-                            title: Text(snapshot.requireData[index].name),
-                            subtitle: Text(snapshot.requireData[index].balance.toString()),
-                            onTap: () {
-                              GoRouterHelper(context).push("/groups/${snapshot.requireData[index].id}");
-                            },
-                          )),
-                ),
-              ],
+                        title: Text(snapshot.requireData[index].name),
+                        subtitle: Text(snapshot.requireData[index].balance.toString()),
+                        onTap: () {
+                          GoRouterHelper(context).push("/groups/${snapshot.requireData[index].id}");
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             );
           },
         ),
